@@ -1,0 +1,9 @@
+{
+  "name": "gas-airtable-wrapper",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "gas-lib": "^2.0.2"
+  }
+}

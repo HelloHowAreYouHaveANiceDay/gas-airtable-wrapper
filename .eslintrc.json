@@ -1,6 +1,13 @@
 {
-    "env": {
-        "browser": true,
-        "node": true
-    }
+  "parserOptions": {
+    "ecmaVersion": 3
+  },
+  "rules": {
+    "semi": "error",
+    "no-extra-semi": "error",
+    "space-before-blocks": "error",
+    "semi-style": "warn"
+  },
+  "globals": {
+  }
 }

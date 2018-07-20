@@ -6,6 +6,7 @@ var GasTable = (function () {
   var defaultAirtableSettings = {
     root: 'https://api.airtable.com/v0',
     params: {
+      apiKey: null,
       base: null,
       table: null,
       fields: [],
@@ -24,13 +25,27 @@ var GasTable = (function () {
       settings: defaultAirtableSettings,
       reset: function () {
         this.settings = defaultAirtableSettings;
-      }
+      },
+      resetOpt: function () {
+        this.settings.optional = defaultAirtableSettings.optional;
+      },
+      set: set,
+      getCurrentUrl: getCurrentUrl
     };
 
     return airtable;
 
-    function get() {
+    function getCurrentUrl() {
+      return encodeUrl();
+    }
 
+    function set(payload) {
+      var params = Object.keys(payload);
+      for (var index = 0; index < params.length; index++) {
+        var key = params[index];
+        this.settings.params[key] = payload[key];
+      }
+      return this;
     }
 
     function appendParam(url, property, value) {
@@ -40,20 +55,74 @@ var GasTable = (function () {
       return url;
     }
 
+    // appendBase :: String -> String
     function appendBase(url) {
-      return url + "/" + this.settings.params.base;
+      return url + "/" + airtable.settings.params.base;
     }
 
-    function appendTable (url) {
-      return url + "/" + this.settings.params.table + "?";
+    // appendTable :: String -> String
+    function appendTable(url) {
+      return url + "/" + airtable.settings.params.table + "?";
+    }
+
+    function appendKey(url) {
+      return url + "api_key=" + airtable.settings.params.apiKey;
     }
 
 
     function encodeUrl() {
-      var url = appendTable(appendBase(this.settings.params.root));
-      var params = Object.keys(this.settings.params);
-      params.map(function (key) { url = appendParam(url, key, optionalSettings[key]); });
-      return url;
+      const base = encodeURIComponent(airtable.settings.params.base)
+      const table = encodeURIComponent(airtable.settings.params.table)
+      var params = []
+
+      if (airtable.settings.params.fields.length > 0) {
+
+        var fields = airtable.settings.params.fields
+
+        for (var i = 0; i < fields.length; i++) {
+          var field = fields[i];
+          params.push('fields%5B%5D=' + encodeURIComponent(field).split('%20').join('+'));
+        }
+
+      }
+
+      if (airtable.settings.params.filterByFormula) {
+        params.push('filterByFormula=' + encodeURIComponent(airtable.settings.params.filterByFormula.trim()));
+      }
+
+      const maxRecords = airtable.settings.params.maxRecords ? parseInt(airtable.settings.params.maxRecords) : 0
+      if (maxRecords) {
+        params.push('maxRecords=' + maxRecords);
+      }
+
+      const pageSize = airtable.settings.params.pageSize ? parseInt(airtable.settings.params.pageSize) : 0
+      if (pageSize) {
+        params.push('pageSize=' + pageSize)
+      }
+
+
+      if (airtable.settings.params.sort.length > 0) {
+        airtable.settings.params.sort.map(function (sort) {
+          params.push('sort%5B0%5D%5Bfield%5D=' + sort.field + '&sort%5B0%5D%5Bdirection%5D=' + sort.direction);
+        })
+      }
+
+      const view = airtable.settings.params.view;
+      if (view) {
+        params.push('view=' + encodeURIComponent(view))
+      }
+
+
+      var url = airtable.settings.root + '/' + base + '/' + table
+
+      if (params.length) {
+        url = url + '?' + params.join('&')
+      }
+
+
+      url = url + '?api_key=API_KEY'
+
+      return url
     }
 
   };

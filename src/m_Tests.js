@@ -7,4 +7,11 @@ function manualTests() {
   });
   var results = airtable.getAllRecords();
   Logger.log(results);
+
+  var createResult = airtable.create({
+    'fields':{
+      'rating': 2
+    }
+  });
+  Logger.log(createResult);
 }

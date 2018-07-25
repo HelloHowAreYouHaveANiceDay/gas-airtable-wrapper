@@ -45,6 +45,7 @@ var GasTable = (function () {
       set: set,
       mount: mount,
       mountGASDefaults: mountGASDefaults,
+      create: create,
       getRecords: getRecords,
       getAllRecords: getAllRecords,
       getCurrentUrl: getCurrentUrl
@@ -80,6 +81,15 @@ var GasTable = (function () {
       return this;
     }
 
+    function create(payload) {
+      var url = _getTableUrl();
+      var post = airtable.settings.mounts.create;
+      var api_key = airtable.settings.params.apiKey;
+      url = url + '?api_key=' + api_key;
+      var response = post(url, JSON.stringify(payload));
+      return JSON.parse(response);
+    }
+
     function getRecords() {
       var read = airtable.settings.mounts.read;
       if (read) {
@@ -113,6 +123,13 @@ var GasTable = (function () {
       }
     }
 
+    function _getTableUrl() {
+      var base = encodeURIComponent(airtable.settings.params.base);
+      var table = encodeURIComponent(airtable.settings.params.table);
+      var url = airtable.settings.root + '/' + base + '/' + table;
+      return url;
+    }
+
     function encodeUrl() {
       var base = encodeURIComponent(airtable.settings.params.base);
       var table = encodeURIComponent(airtable.settings.params.table);
@@ -124,7 +141,12 @@ var GasTable = (function () {
 
         for (var i = 0; i < fields.length; i++) {
           var field = fields[i];
-          params.push('fields%5B%5D=' + encodeURIComponent(field).split('%20').join('+'));
+          params.push(
+            'fields%5B%5D=' +
+            encodeURIComponent(field)
+              .split('%20')
+              .join('+')
+          );
         }
 
       }

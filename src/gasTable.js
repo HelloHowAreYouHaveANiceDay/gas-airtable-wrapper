@@ -5,6 +5,12 @@ var GasTable = (function () {
    */
   var defaultAirtableSettings = {
     root: 'https://api.airtable.com/v0',
+    mounts: {
+      create: undefined,
+      read: undefined,
+      up: undefined,
+      del: undefined
+    },
     params: {
       apiKey: null,
       base: null,
@@ -15,6 +21,7 @@ var GasTable = (function () {
       pageSize: null,
       sort: [],
       view: null,
+      offset: null,
     }
   };
 
@@ -36,13 +43,17 @@ var GasTable = (function () {
         this.settings.params.view = null;
       },
       set: set,
+      mount: mount,
+      mountGASDefaults: mountGASDefaults,
+      getRecords: getRecords,
+      getAllRecords: getAllRecords,
       getCurrentUrl: getCurrentUrl
     };
 
     if (options) {
       Object.keys(options).map(function (key) {
         airtable.settings.params[key] = options[key];
-      })
+      });
     }
 
     return airtable;
@@ -60,36 +71,56 @@ var GasTable = (function () {
       return this;
     }
 
-    function appendParam(url, property, value) {
-      if (value && value.length > 0) {
-        return url + "&" + property + "=" + value;
+    function mount(payload) {
+      var params = Object.keys(payload);
+      for (var index = 0; index < params.length; index++) {
+        var key = params[index];
+        this.settings.mounts[key] = payload[key];
       }
-      return url;
+      return this;
     }
 
-    // appendBase :: String -> String
-    function appendBase(url) {
-      return url + "/" + airtable.settings.params.base;
+    function getRecords() {
+      var read = airtable.settings.mounts.read;
+      if (read) {
+        return JSON.parse(read(encodeUrl())).records;
+      } else {
+        throw new Error('read function not available, please mount read function first');
+      }
     }
 
-    // appendTable :: String -> String
-    function appendTable(url) {
-      return url + "/" + airtable.settings.params.table + "?";
+    function getAllRecords() {
+      var read = airtable.settings.mounts.read;
+      if (read) {
+        var collection = [];
+        var its = true;
+        while (its === true) {
+          var result = JSON.parse(read(encodeUrl()));
+          if (result.offset) {
+            Logger.log(result.offset);
+            collection.push(result.records);
+            airtable.settings.params.offset = encodeURIComponent(result.offset);
+          } else {
+            Logger.log(result.offset);
+            collection.push(result.records);
+            airtable.settings.params.offset = undefined;
+            its = false;
+          }
+        }
+        return [].concat.apply([], collection);
+      } else {
+        throw new Error('read function not available, please mount read function first');
+      }
     }
-
-    function appendKey(url) {
-      return url + "api_key=" + airtable.settings.params.apiKey;
-    }
-
 
     function encodeUrl() {
-      var base = encodeURIComponent(airtable.settings.params.base)
-      var table = encodeURIComponent(airtable.settings.params.table)
-      var params = []
+      var base = encodeURIComponent(airtable.settings.params.base);
+      var table = encodeURIComponent(airtable.settings.params.table);
+      var params = [];
 
       if (airtable.settings.params.fields.length > 0) {
 
-        var fields = airtable.settings.params.fields
+        var fields = airtable.settings.params.fields;
 
         for (var i = 0; i < fields.length; i++) {
           var field = fields[i];
@@ -102,39 +133,84 @@ var GasTable = (function () {
         params.push('filterByFormula=' + encodeURIComponent(airtable.settings.params.filterByFormula.trim()));
       }
 
-      var maxRecords = airtable.settings.params.maxRecords ? parseInt(airtable.settings.params.maxRecords) : 0
+      var maxRecords = airtable.settings.params.maxRecords ? parseInt(airtable.settings.params.maxRecords) : 0;
       if (maxRecords) {
         params.push('maxRecords=' + maxRecords);
       }
 
-      var pageSize = airtable.settings.params.pageSize ? parseInt(airtable.settings.params.pageSize) : 0
+      var pageSize = airtable.settings.params.pageSize ? parseInt(airtable.settings.params.pageSize) : 0;
       if (pageSize) {
-        params.push('pageSize=' + pageSize)
+        params.push('pageSize=' + pageSize);
       }
 
 
       for (var index = 0; index < airtable.settings.params.sort.length; index++) {
         var element = airtable.settings.params.sort[index];
-        params.push('sort%5B' + index + '%5D%5Bfield%5D=' + element.field + 
-                    '&sort%5B'+ index + '%5D%5Bdirection%5D=' + element.direction);
+        params.push('sort%5B' + index + '%5D%5Bfield%5D=' + element.field +
+          '&sort%5B' + index + '%5D%5Bdirection%5D=' + element.direction);
       }
 
       var view = airtable.settings.params.view;
       if (view) {
-        params.push('view=' + encodeURIComponent(view))
+        params.push('view=' + encodeURIComponent(view));
       }
 
+      var offset = airtable.settings.params.offset;
+      if (offset) {
+        params.push('offset=' + offset);
+      }
 
-      var url = airtable.settings.root + '/' + base + '/' + table
+      var api_key = airtable.settings.params.apiKey;
+      if (api_key) {
+        params.push('api_key=' + api_key);
+      }
+
+      var url = airtable.settings.root + '/' + base + '/' + table;
 
       if (params.length) {
-        url = url + '?' + params.join('&')
+        url = url + '?' + params.join('&');
       }
 
-
-      url = url + '?api_key=' + airtable.settings.params.apiKey;
-
       return url;
+    }
+
+
+    // GOOGLE APPS SCRIPTS FUNCTION MOUNTINGS
+
+    function mountGASDefaults() {
+      airtable.settings.mounts = {
+        create: _GAScreate,
+        read: _GASget,
+        up: _GASpatch,
+        del: _GASdelete
+      };
+      return this;
+    }
+
+    function _GAScreate(url, payload) {
+      return UrlFetchApp.fetch(url, {
+        method: 'post',
+        contentType: 'application/json',
+        payload: payload
+      });
+    }
+
+    function _GASget(url) {
+      return UrlFetchApp.fetch(url);
+    }
+
+    function _GASpatch(url, payload) {
+      return UrlFetchApp.fetch(url, {
+        method: 'patch',
+        contentType: 'application/json',
+        payload: payload
+      });
+    }
+
+    function _GASdelete(url) {
+      return UrlFetchApp.fetch(url, {
+        method: 'delete'
+      });
     }
 
   };

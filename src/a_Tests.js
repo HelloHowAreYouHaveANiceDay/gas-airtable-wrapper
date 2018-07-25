@@ -27,10 +27,10 @@ function runTests() {
     t.equal(airtable.getCurrentUrl(), url, 'with fields good');
   });
 
-  test('withView', function(t) {
+  test('withSort', function (t) {
     airtable.resetOpt();
     airtable.set({
-      sort:[
+      sort: [
         {
           field: 'first',
           direction: 'asc'
@@ -43,10 +43,17 @@ function runTests() {
     });
 
     var url = 'https://api.airtable.com/v0/appkQMyX2Zb4gCLBY/Games?sort%5B0%5D%5Bfield%5D=first&sort%5B0%5D%5Bdirection%5D=asc&sort%5B1%5D%5Bfield%5D=second&sort%5B1%5D%5Bdirection%5D=desc?api_key=' + _getKey();
-    t.equal(airtable.getCurrentUrl(), url, 'with view good');
-
+    t.equal(airtable.getCurrentUrl(), url, 'with sort good');
   });
 
+  test('withView', function (t) {
+    airtable.resetOpt();
+    airtable.set({
+      view: 'testView'
+    });
+    var url = 'https://api.airtable.com/v0/appkQMyX2Zb4gCLBY/Games?view=testView?api_key=' + _getKey();
+    t.equal(airtable.getCurrentUrl(), url, 'with view good');
+  });
 
   test.finish();
 }

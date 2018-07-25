@@ -47,6 +47,7 @@ var GasTable = (function () {
       mountGASDefaults: mountGASDefaults,
       create: create,
       update: update,
+      del: del,
       getRecords: getRecords,
       getAllRecords: getAllRecords,
       getCurrentUrl: getCurrentUrl
@@ -91,14 +92,6 @@ var GasTable = (function () {
       return JSON.parse(response);
     }
 
-    function update(record_id, payload) {
-      var url = _getTableUrl();
-      var patch = airtable.settings.mounts.up;
-      var api_key = airtable.settings.params.apiKey;
-      url = url + '/' + record_id + '?api_key=' + api_key;
-      var response = patch(url, JSON.stringify(payload));
-      return (JSON.parse(response));
-    }
 
     function getRecords() {
       var read = airtable.settings.mounts.read;
@@ -131,6 +124,24 @@ var GasTable = (function () {
       } else {
         throw new Error('read function not available, please mount read function first');
       }
+    }
+
+    function update(record_id, payload) {
+      var url = _getTableUrl();
+      var patch = airtable.settings.mounts.up;
+      var api_key = airtable.settings.params.apiKey;
+      url = url + '/' + record_id + '?api_key=' + api_key;
+      var response = patch(url, JSON.stringify(payload));
+      return (JSON.parse(response));
+    }
+
+    function del(record_id) {
+      var url = _getTableUrl();
+      var del = airtable.settings.mounts.del;
+      var api_key = airtable.settings.params.apiKey;
+      url = url + '/' + record_id + '?api_key=' + api_key;
+      var response = del(url);
+      return (JSON.parse(response));
     }
 
     function _getTableUrl() {

@@ -15,11 +15,14 @@ function manualTests() {
   // });
   // Logger.log(createResult);
 
-  var patchResult = airtable.update('recAcX51Bfxx17nIv', {
-    'fields': {
-      'Stack': 4
-    }
-  });
+  // var patchResult = airtable.update('recAcX51Bfxx17nIv', {
+  //   'fields': {
+  //     'Stack': 4
+  //   }
+  // });
  
-  Logger.log(patchResult);
+  // Logger.log(patchResult);
+
+  var delResult = airtable.del('recAcX51Bfxx17nIv');
+  Logger.log(delResult);
 }

@@ -33,6 +33,12 @@ var GasTable = (function () {
       getCurrentUrl: getCurrentUrl
     };
 
+    if (options) {
+      Object.keys(options).map(function(key){
+        airtable.settings.params[key] = options[key]; 
+      })
+    }
+
     return airtable;
 
     function getCurrentUrl() {
@@ -120,7 +126,7 @@ var GasTable = (function () {
       }
 
 
-      url = url + '?api_key=API_KEY'
+      url = url + '?api_key=' + airtable.settings.params.apiKey;
 
       return url
     }

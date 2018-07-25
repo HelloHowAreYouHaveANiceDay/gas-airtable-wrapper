@@ -8,10 +8,18 @@ function manualTests() {
   var results = airtable.getAllRecords();
   Logger.log(results);
 
-  var createResult = airtable.create({
-    'fields':{
-      'rating': 2
+  // var createResult = airtable.create({
+  //   'fields':{
+  //     'rating': 2
+  //   }
+  // });
+  // Logger.log(createResult);
+
+  var patchResult = airtable.update('recAcX51Bfxx17nIv', {
+    'fields': {
+      'Stack': 4
     }
   });
-  Logger.log(createResult);
+ 
+  Logger.log(patchResult);
 }

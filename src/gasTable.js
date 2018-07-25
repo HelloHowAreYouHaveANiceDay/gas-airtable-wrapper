@@ -27,15 +27,21 @@ var GasTable = (function () {
         this.settings = defaultAirtableSettings;
       },
       resetOpt: function () {
-        this.settings.optional = defaultAirtableSettings.optional;
+        // clean up
+        this.settings.params.fields = [];
+        this.settings.params.maxRecords = null;
+        this.settings.params.filterByFormula = null;
+        this.settings.params.pageSize = null;
+        this.settings.params.sort = [];
+        this.settings.params.view = null;
       },
       set: set,
       getCurrentUrl: getCurrentUrl
     };
 
     if (options) {
-      Object.keys(options).map(function(key){
-        airtable.settings.params[key] = options[key]; 
+      Object.keys(options).map(function (key) {
+        airtable.settings.params[key] = options[key];
       })
     }
 
@@ -77,8 +83,8 @@ var GasTable = (function () {
 
 
     function encodeUrl() {
-      const base = encodeURIComponent(airtable.settings.params.base)
-      const table = encodeURIComponent(airtable.settings.params.table)
+      var base = encodeURIComponent(airtable.settings.params.base)
+      var table = encodeURIComponent(airtable.settings.params.table)
       var params = []
 
       if (airtable.settings.params.fields.length > 0) {
@@ -96,24 +102,24 @@ var GasTable = (function () {
         params.push('filterByFormula=' + encodeURIComponent(airtable.settings.params.filterByFormula.trim()));
       }
 
-      const maxRecords = airtable.settings.params.maxRecords ? parseInt(airtable.settings.params.maxRecords) : 0
+      var maxRecords = airtable.settings.params.maxRecords ? parseInt(airtable.settings.params.maxRecords) : 0
       if (maxRecords) {
         params.push('maxRecords=' + maxRecords);
       }
 
-      const pageSize = airtable.settings.params.pageSize ? parseInt(airtable.settings.params.pageSize) : 0
+      var pageSize = airtable.settings.params.pageSize ? parseInt(airtable.settings.params.pageSize) : 0
       if (pageSize) {
         params.push('pageSize=' + pageSize)
       }
 
 
-      if (airtable.settings.params.sort.length > 0) {
-        airtable.settings.params.sort.map(function (sort) {
-          params.push('sort%5B0%5D%5Bfield%5D=' + sort.field + '&sort%5B0%5D%5Bdirection%5D=' + sort.direction);
-        })
+      for (var index = 0; index < airtable.settings.params.sort.length; index++) {
+        var element = airtable.settings.params.sort[index];
+        params.push('sort%5B' + index + '%5D%5Bfield%5D=' + element.field + 
+                    '&sort%5B'+ index + '%5D%5Bdirection%5D=' + element.direction);
       }
 
-      const view = airtable.settings.params.view;
+      var view = airtable.settings.params.view;
       if (view) {
         params.push('view=' + encodeURIComponent(view))
       }
@@ -128,7 +134,7 @@ var GasTable = (function () {
 
       url = url + '?api_key=' + airtable.settings.params.apiKey;
 
-      return url
+      return url;
     }
 
   };

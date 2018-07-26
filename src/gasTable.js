@@ -1,6 +1,7 @@
 var GasTable = (function () {
   'use strict';
   /**
+   * AIRTABLE REST requests wrapper for google apps script.
    * 
    */
   var defaultAirtableSettings = {
@@ -60,6 +61,9 @@ var GasTable = (function () {
     }
 
     return airtable;
+
+
+    // METHODS
 
     function getCurrentUrl() {
       return encodeUrl();
@@ -144,6 +148,9 @@ var GasTable = (function () {
       return (JSON.parse(response));
     }
 
+
+    // HELPERS
+
     function _getTableUrl() {
       var base = encodeURIComponent(airtable.settings.params.base);
       var table = encodeURIComponent(airtable.settings.params.table);
@@ -152,6 +159,8 @@ var GasTable = (function () {
     }
 
     function encodeUrl() {
+      // airtable has some weird encoding, this was built to match
+      // as closely as possible airtable's own request encoder
       var base = encodeURIComponent(airtable.settings.params.base);
       var table = encodeURIComponent(airtable.settings.params.table);
       var params = [];
@@ -189,8 +198,8 @@ var GasTable = (function () {
 
       for (var index = 0; index < airtable.settings.params.sort.length; index++) {
         var element = airtable.settings.params.sort[index];
-        params.push('sort%5B' + index + '%5D%5Bfield%5D=' + element.field +
-          '&sort%5B' + index + '%5D%5Bdirection%5D=' + element.direction);
+        params.push('sort%5B' + index + '%5D%5Bfield%5D='     + element.field +
+                   '&sort%5B' + index + '%5D%5Bdirection%5D=' + element.direction);
       }
 
       var view = airtable.settings.params.view;
@@ -219,6 +228,7 @@ var GasTable = (function () {
 
 
     // GOOGLE APPS SCRIPTS FUNCTION MOUNTINGS
+    // To use with another requests library use `airtable.set()`
 
     function mountGASDefaults() {
       airtable.settings.mounts = {
